@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: loki-distributed
+    app.kubernetes.io/version: 2.9.2
+    helm.sh/chart: loki-distributed-0.78.2
+  name: loki-gateway
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki-distributed
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: b3f922ca11ecea66df96c5157d9be3b6d0b343435ad44f87acea8310301b9af8
+      labels:
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki-distributed
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/component: gateway
+                    app.kubernetes.io/instance: loki
+                    app.kubernetes.io/name: loki-distributed
+                topologyKey: failure-domain.beta.kubernetes.io/zone
+              weight: 100
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: gateway
+                  app.kubernetes.io/instance: loki
+                  app.kubernetes.io/name: loki-distributed
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - image: docker.io/nginxinc/nginx-unprivileged:1.20.2-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+          name: nginx
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /etc/nginx
+              name: config
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /docker-entrypoint.d
+              name: docker-entrypoint-d-override
+      securityContext:
+        fsGroup: 101
+        runAsGroup: 101
+        runAsNonRoot: true
+        runAsUser: 101
+      serviceAccountName: loki
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            name: loki-gateway
+          name: config
+        - emptyDir: {}
+          name: tmp
+        - emptyDir: {}
+          name: docker-entrypoint-d-override

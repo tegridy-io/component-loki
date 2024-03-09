@@ -3,8 +3,8 @@ local inv = kap.inventory();
 local params = inv.parameters.loki;
 local argocd = import 'lib/argocd.libjsonnet';
 
-local app = argocd.App('loki', params.namespace);
+local app = argocd.App(inv.parameters._instance, params.namespace.name);
 
 {
-  loki: app,
+  [inv.parameters._instance]: app,
 }
