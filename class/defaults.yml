@@ -1,4 +1,83 @@
 parameters:
   loki:
-    =_metadata: {}
-    namespace: syn-loki
+    =_metadata:
+      multi_instance: true
+
+    # --- Component configuration ----------------------------------------------
+
+    namespace:
+      annotations: {}
+      labels: {}
+      name: syn-${_instance}
+
+    charts:
+      loki:
+        source: https://grafana.github.io/helm-charts
+        version: 0.78.2
+
+    components:
+      querier:
+        replicas: 2
+        resources: {}
+      queryFrontend:
+        replicas: 1
+        resources: {}
+
+      distributor:
+        replicas: 1
+        resources: {}
+      ingester:
+        replicas: 3
+        resources: {}
+
+      compactor:
+        replicas: 1
+        resources: {}
+
+      gateway:
+        replicas: 1
+        resources: {}
+
+    optional:
+      indexGateway:
+        enabled: false
+        replicas: 1
+        resources: {}
+      queryScheduler:
+        enabled: false
+        replicas: 1
+        resources: {}
+      ruler:
+        enabled: false
+        replicas: 1
+        resources: {}
+      tableManager:
+        enabled: false
+        replicas: 1
+        resources: {}
+
+    caches:
+      exporter:
+        enabled: false
+        resources: {}
+      chunks:
+        enabled: false
+        replicas: 1
+        resources: {}
+      frontend:
+        enabled: false
+        replicas: 1
+        resources: {}
+      indexQueries:
+        enabled: false
+        replicas: 1
+        resources: {}
+      indexWrites:
+        enabled: false
+        replicas: 1
+        resources: {}
+
+    # --- Helm configuration ---------------------------------------------------
+
+    helmValues:
+      fullnameOverride: ${_instance}

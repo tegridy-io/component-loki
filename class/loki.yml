@@ -1,5 +1,12 @@
 parameters:
   kapitan:
+    dependencies:
+      - type: helm
+        source: ${loki:charts:loki:source}
+        chart_name: loki-distributed
+        version: ${loki:charts:loki:version}
+        output_path: ${_base_directory}/helmcharts/loki/${loki:charts:loki:version}/
+
     compile:
       - input_paths:
           - ${_base_directory}/component/app.jsonnet
@@ -9,3 +16,19 @@ parameters:
           - ${_base_directory}/component/main.jsonnet
         input_type: jsonnet
         output_path: loki/
+      # --- Helm
+      - input_paths:
+          - ${_base_directory}/component/helm.jsonnet
+        input_type: jsonnet
+        output_path: ${_base_directory}/helmcharts/loki/${loki:charts:loki:version}/
+      - input_paths:
+          - ${_base_directory}/helmcharts/loki/${loki:charts:loki:version}
+        input_type: helm
+        output_path: ${_instance}//10_helmchart/
+        helm_values_files:
+          - ${_base_directory}/helmcharts/loki/${loki:charts:loki:version}/${_instance}-components.yaml
+          # - ${_base_directory}/helmcharts/loki/${loki:charts:loki:version}/${_instance}-configs.yaml
+          - ${_base_directory}/helmcharts/loki/${loki:charts:loki:version}/${_instance}-overrides.yaml
+        helm_params:
+          name: loki
+          namespace: ${loki:namespace:name}
