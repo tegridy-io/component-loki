@@ -1,0 +1,5 @@
+= Loki Log Store
+
+loki is a Commodore component to manage Loki Log Store.
+
+See the xref:references/parameters.adoc[parameters] reference for further details.
